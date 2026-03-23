@@ -1,0 +1,139 @@
+// Prisma Schema for Humanizer Website
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // 改为 PostgreSQL 用于生产环境
+  url      = env("DATABASE_URL")
+}
+
+// User Model - Basic user information
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?   // For credential auth
+  role          Role      @default(USER)
+
+  // Quota tracking
+  quota         Quota?
+  usages        Usage[]
+
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // NextAuth relations
+  accounts      Account[]
+  sessions      Session[]
+}
+
+// Account Model - OAuth providers (reserved for future use)
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+// Session Model - User sessions
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// VerificationToken Model - Email verification (reserved for future use)
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Quota Model - User quota management
+model Quota {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  totalQuota          Int      @default(1000)      // Total allocated quota (characters)
+  usedQuota           Int      @default(0)         // Quota used (characters)
+  remainingQuota      Int      @default(1000)      // Remaining = total - used
+  planType            PlanType @default(FREE)
+
+  // Renewal tracking
+  lastRenewalDate     DateTime @default(now())
+  nextRenewalDate     DateTime?
+
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// Usage Model - Detailed usage records
+model Usage {
+  id              String      @id @default(cuid())
+  userId          String
+
+  // Usage details
+  actionType      ActionType  // HUMANIZE | DETECT | CHECK
+  inputLength     Int         // Number of characters processed
+  quotaDeducted   Int         // Quota deducted for this action
+
+  // Processing results
+  aiScoreBefore   Int?
+  aiScoreAfter    Int?
+  uniquenessScore Int?
+
+  // Metadata
+  mode            String?     // standard | deep | quick
+  tone            String?     // formal | casual | professional | humorous | academic
+  language        String?     // zh | en | auto
+  antiDuplicate   Boolean     @default(false)
+
+  // API reference
+  requestId       String?
+
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt       DateTime    @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// Enums
+enum Role {
+  USER
+  ADMIN
+}
+
+enum PlanType {
+  FREE
+  BASIC
+  PRO
+  ENTERPRISE
+}
+
+enum ActionType {
+  HUMANIZE
+  DETECT
+  CHECK
+}
