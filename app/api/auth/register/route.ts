@@ -58,8 +58,9 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     if (error instanceof z.ZodError) {
+      const issues = error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join(', ')
       return NextResponse.json(
-        { success: false, error: "Invalid input data" },
+        { success: false, error: `Invalid input: ${issues}` },
         { status: 400 }
       )
     }
