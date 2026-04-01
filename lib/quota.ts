@@ -10,6 +10,7 @@ export interface UsageMetadata {
   aiScoreBefore?: number
   aiScoreAfter?: number
   uniquenessScore?: number
+  inputLength?: number
   requestId?: string
 }
 
@@ -101,7 +102,7 @@ export async function deductQuota(
       data: {
         userId,
         actionType,
-        inputLength: metadata?.mode ? Math.floor(amount / (actionType === "HUMANIZE" ? 1 : actionType === "DETECT" ? 0.5 : 0.3)) : amount,
+        inputLength: metadata?.inputLength ?? (metadata?.mode ? Math.floor(amount / (actionType === "HUMANIZE" ? 1 : actionType === "DETECT" ? 0.5 : 0.3)) : amount),
         quotaDeducted: amount,
         aiScoreBefore: metadata?.aiScoreBefore,
         aiScoreAfter: metadata?.aiScoreAfter,
