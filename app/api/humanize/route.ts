@@ -115,19 +115,19 @@ export async function POST(request: Request) {
 // Mock humanization function - replace with actual AI API
 function simulateHumanization(text: string, mode: string, tone: string): string {
   // This is a placeholder - in production, you would call Claude API or similar
-  const modifications = [
-    "crucial" => "important",
-    "pivotal" => "key",
-    "testament to" => "shows",
-    "underscores" => "highlights",
-    "Additionally," => "",
-    "Furthermore," => "",
-    "Moreover," => "",
-    "In today's rapidly evolving" => "In our current",
-    "It is important to note that" => "Note that",
-    "serves as" => "is",
-    "stands as" => "is",
-  ]
+  const modifications = {
+    "crucial": "important",
+    "pivotal": "key",
+    "testament to": "shows",
+    "underscores": "highlights",
+    "Additionally,": "",
+    "Furthermore,": "",
+    "Moreover,": "",
+    "In today's rapidly evolving": "In our current",
+    "It is important to note that": "Note that",
+    "serves as": "is",
+    "stands as": "is",
+  }
 
   let result = text
   for (const [oldWord, newWord] of Object.entries(modifications)) {
